@@ -1,0 +1,193 @@
+/* =========================================================
+   Responsive improvements - Step 17.2
+   ========================================================= */
+
+/* Tablet: 768px and up */
+@media (min-width: 768px) {
+  .dashboard {
+    padding: 24px;
+  }
+
+  .history-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .patient-list {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Laptop: 1024px and up */
+@media (min-width: 1024px) {
+  .dashboard {
+    padding: 32px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 330px minmax(0, 1fr);
+  }
+
+  .patients-panel {
+    order: initial;
+  }
+
+  .analysis-panel {
+    order: initial;
+  }
+}
+
+/* Mobile/tablet: below 1024px */
+@media (max-width: 1023px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patients-panel {
+    order: 1;
+  }
+
+  .analysis-panel {
+    order: 2;
+  }
+
+  .patient-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile: below 768px */
+@media (max-width: 767px) {
+  .topbar {
+    min-height: 64px;
+    padding: 12px 16px;
+  }
+
+  .topbar-brand strong {
+    font-size: 14px;
+  }
+
+  .topbar-brand span {
+    font-size: 11px;
+  }
+
+  .logout-button {
+    min-height: 40px;
+  }
+
+  .dashboard {
+    padding: 20px 14px;
+  }
+
+  .welcome-section h1 {
+    font-size: 24px;
+  }
+
+  .dashboard-grid {
+    gap: 16px;
+  }
+
+  .analysis-panel {
+    padding: 18px;
+  }
+
+  .patient-list {
+    grid-template-columns: 1fr;
+  }
+
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-header {
+    align-items: flex-start;
+  }
+
+  .patient-header h2 {
+    font-size: 19px;
+  }
+
+  .analysis-form textarea {
+    min-height: 110px;
+  }
+
+  .analyze-button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .result-card {
+    padding: 17px;
+  }
+
+  .result-header {
+    flex-direction: column;
+  }
+
+  .risk-badge {
+    align-self: flex-start;
+  }
+
+  .previous-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Very small phones: 320px-400px */
+@media (max-width: 400px) {
+  .login-app {
+    padding: 18px 12px;
+  }
+
+  .login-card {
+    padding: 22px 16px;
+    border-radius: 16px;
+  }
+
+  .brand {
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+
+  .brand-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 26px;
+  }
+
+  .brand h1 {
+    font-size: 16px;
+  }
+
+  .login-heading h2 {
+    font-size: 24px;
+  }
+
+  .dashboard {
+    padding: 16px 10px;
+  }
+
+  .welcome-section h1 {
+    font-size: 22px;
+  }
+
+  .panel-header {
+    padding: 16px;
+  }
+
+  .analysis-panel {
+    padding: 15px;
+  }
+
+  .patient-avatar.large {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+  }
+
+  .result-card {
+    padding: 14px;
+  }
+}
