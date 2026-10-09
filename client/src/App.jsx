@@ -2319,18 +2319,24 @@ function App() {
                       <div className="previous-list">
                         {insights.map((item) => (
                           <div
-                            className="previous-item"
+                            className={`previous-item risk-${String(
+                              item.riskLevel || ''
+                            ).toLowerCase()}`}
                             key={item._id}
                           >
                             <div className="previous-top">
                               <strong>
-                                {item.riskLevel} Risk
+                                {item.riskLevel
+                                  ? `${item.riskLevel} Risk`
+                                  : 'Not assessed'}
                               </strong>
 
                               <span>
-                                {new Date(
-                                  item.createdAt
-                                ).toLocaleString()}
+                                {item.createdAt
+                                  ? new Date(
+                                      item.createdAt
+                                    ).toLocaleString()
+                                  : ''}
                               </span>
                             </div>
 

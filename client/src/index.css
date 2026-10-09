@@ -1,1 +1,8 @@
-@import "tailwindcss";
+/* Tailwind CSS v4, loaded WITHOUT its global "preflight" reset.
+   App.css already defines this app's own base styles, and the reset
+   would change headings, buttons and spacing across the whole app.
+   The theme (colors, spacing) and the utility classes used by
+   AIResultCard.jsx are still fully available. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);

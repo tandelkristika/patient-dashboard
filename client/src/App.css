@@ -1154,6 +1154,9 @@ button:disabled {
 .patient-item + .patient-item {
   margin-top: 2px;
 }
+.patient-item.selected .patient-avatar {
+  background: #fff;
+}
 
 .patient-item:hover {
   background: #f7f9fc;
@@ -2945,4 +2948,593 @@ button:disabled {
 ::selection {
   background: #dbeafe;
   color: #17366f;
+}
+
+
+/* =========================================================
+   READABILITY IMPROVEMENTS
+   Patient names, details, and AI results
+========================================================= */
+
+/* Give patient lists a little more room and improve text readability. */
+.patient-list,
+.patient-management-list {
+  padding: 10px;
+}
+
+.patient-item {
+  min-height: 76px;
+  padding: 12px;
+  gap: 12px;
+}
+
+.patient-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.patient-info strong {
+  color: #172033;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.patient-info span {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.patient-management-list .patient-item {
+  min-height: 78px;
+  padding: 12px 14px;
+}
+
+.patient-management-list .patient-info strong {
+  font-size: 14px;
+}
+
+.patient-management-list .patient-info span {
+  font-size: 11px;
+}
+
+/* Prevent narrow panels from squeezing patient names too aggressively. */
+.dashboard-grid {
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.6fr);
+  gap: 20px;
+}
+
+.patients-panel,
+.analysis-panel,
+.patient-management-card,
+.ai-result-card {
+  min-width: 0;
+}
+
+/* Clearer patient details and medical-history values. */
+.patient-main-info h2 {
+  font-size: 21px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.patient-main-info p {
+  font-size: 11px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.history-item {
+  min-width: 0;
+  padding: 12px;
+}
+
+.history-item span {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.history-item strong {
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Improve the hierarchy and reading comfort of AI analysis results. */
+.ai-result-card {
+  margin-top: 22px;
+  border-color: #dfe6ef;
+  border-radius: 14px;
+}
+
+.ai-result-card-header {
+  padding: 22px 24px;
+  gap: 18px;
+}
+
+.ai-result-card-header h2 {
+  font-size: 18px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.ai-result-card-header p {
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.ai-result-body {
+  padding: 22px 24px;
+}
+
+.ai-result-summary {
+  padding: 17px 18px;
+}
+
+.ai-result-summary h3,
+.ai-result-section-header h3 {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-result-summary p,
+.ai-considerations p {
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.ai-result-section {
+  margin-top: 22px;
+}
+
+.ai-warning-list {
+  gap: 10px;
+}
+
+.ai-warning-item {
+  padding: 13px 14px;
+  gap: 10px;
+}
+
+.ai-warning-item strong {
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.ai-warning-item span {
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.ai-considerations {
+  padding: 15px 16px;
+}
+
+.ai-safety-notice {
+  padding: 14px 15px;
+}
+
+.ai-safety-notice p {
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.ai-escalation-message {
+  padding: 14px 15px;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.ai-escalation-message strong {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ai-result-footer {
+  padding: 14px 24px;
+  font-size: 10px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+/* Keep forms and result content from overflowing on smaller screens. */
+.analysis-panel,
+.ai-result-body,
+.ai-result-card-header,
+.ai-result-footer {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .patient-list {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 720px) {
+  .patient-item,
+  .patient-management-list .patient-item {
+    min-height: 74px;
+    padding: 11px;
+    gap: 10px;
+  }
+
+  .patient-info strong,
+  .patient-management-list .patient-info strong {
+    font-size: 13px;
+  }
+
+  .patient-info span,
+  .patient-management-list .patient-info span {
+    font-size: 11px;
+  }
+
+  .ai-result-card-header {
+    padding: 17px;
+  }
+
+  .ai-result-body {
+    padding: 17px;
+  }
+
+  .ai-result-summary p,
+  .ai-considerations p {
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .ai-warning-item strong {
+    font-size: 11px;
+  }
+
+  .ai-warning-item span {
+    font-size: 10px;
+  }
+
+  .ai-result-footer {
+    padding: 12px 17px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    gap: 13px;
+  }
+
+  .patient-main-info h2 {
+    font-size: 17px;
+  }
+
+  .history-item strong {
+    font-size: 11px;
+  }
+
+  .ai-result-card-header h2 {
+    font-size: 16px;
+  }
+
+  .ai-result-summary {
+    padding: 12px;
+  }
+
+  .ai-warning-item {
+    padding: 10px;
+  }
+}
+
+
+/* =========================================================
+   FINAL FIX: selectors matching the actual App.jsx markup
+   ========================================================= */
+.patient-management-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px 18px;
+}
+.patient-management-item {
+  width: 100%;
+  min-width: 0;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 16px;
+  text-align: left;
+  border: 1px solid #e4eaf2;
+  border-radius: 12px;
+  background: #fff;
+  color: #172033;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.patient-management-item:hover {
+  border-color: #b8cdf8;
+  background: #f8fbff;
+}
+.patient-management-item.selected {
+  border-color: #7aa5f8;
+  background: #f2f7ff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, .08);
+}
+.patient-management-item .patient-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #eaf1ff;
+  color: #2858b8;
+  font-size: 16px;
+  font-weight: 800;
+}
+.patient-management-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.patient-management-info strong {
+  display: block;
+  max-width: 100%;
+  color: #172033;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.patient-management-info span,
+.patient-management-info small {
+  display: block;
+  max-width: 100%;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.patient-management-info small { color: #7b8495; }
+.patient-management-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #8a94a6;
+}
+.patient-record-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: #eaf8f0;
+  color: #18794e;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Improve AI result typography while retaining the existing component design. */
+.ai-result-card { width: 100%; min-width: 0; }
+.ai-result-card-header { align-items: flex-start; flex-wrap: wrap; }
+.ai-result-card-header h2 { font-size: 19px; line-height: 1.45; }
+.ai-result-card-header p { font-size: 12px; line-height: 1.65; }
+.ai-risk-badge { font-size: 11px; }
+.ai-result-body { display: flex; flex-direction: column; gap: 4px; }
+.ai-result-summary h3,
+.ai-result-section-header h3 { font-size: 14px; line-height: 1.5; }
+.ai-result-summary p,
+.ai-warning-item span,
+.ai-considerations p { font-size: 13px; line-height: 1.75; }
+.ai-warning-item { gap: 12px; padding: 14px 15px; }
+.ai-warning-item strong { font-size: 13px; line-height: 1.55; }
+.ai-safety-notice p { font-size: 12px; line-height: 1.75; }
+.ai-result-footer { font-size: 11px; line-height: 1.7; }
+
+@media (max-width: 640px) {
+  .patient-management-list { padding: 10px; gap: 8px; }
+  .patient-management-item { min-height: 78px; padding: 11px; gap: 10px; }
+  .patient-management-item .patient-avatar { width: 38px; height: 38px; flex-basis: 38px; }
+  .patient-management-info strong { font-size: 13px; }
+  .patient-management-info span,
+  .patient-management-info small { font-size: 11px; }
+  .patient-management-right { gap: 4px; }
+  .patient-record-status { display: none; }
+  .ai-result-card-header, .ai-result-body { padding: 16px; }
+  .ai-result-card-header h2 { font-size: 17px; }
+  .ai-result-summary p,
+  .ai-warning-item span,
+  .ai-considerations p { font-size: 12px; }
+}
+
+/* =========================================================
+   READABILITY PASS: patient list, analysis form, timeline
+   (kept last so it overrides the older rules above)
+========================================================= */
+
+/* ---- Patient list ---- */
+.patient-management-item {
+  font-family: inherit;
+}
+
+.patient-management-info strong {
+  font-size: 15px;
+}
+
+.patient-management-info span {
+  font-size: 13px;
+}
+
+.patient-management-info small {
+  font-size: 12px;
+}
+
+.patient-record-status {
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+/* ---- Analysis form labels and counters ---- */
+.analysis-form .input-label {
+  font-size: 13px;
+}
+
+.analysis-form .input-label em {
+  font-size: 10px;
+}
+
+.analysis-form label small {
+  font-size: 11px;
+}
+
+/* ---- Previous AI analyses (timeline) ---- */
+.history-panel .section-title h3 {
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.history-panel .section-title p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.previous-list {
+  position: relative;
+  margin: 18px 0 0;
+  padding: 0 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* vertical timeline line */
+.previous-list::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 7px;
+  width: 2px;
+  border-radius: 2px;
+  background: #e2e8f0;
+}
+
+.previous-item {
+  position: relative;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* timeline dot (neutral unless the risk level is known) */
+.previous-item::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: -24px;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #94a3b8;
+  box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+.previous-item.risk-low::before { background: #16a34a; }
+.previous-item.risk-medium::before { background: #d97706; }
+.previous-item.risk-high::before { background: #dc2626; }
+
+.previous-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+/* risk label as a pill: text is always shown, never color alone */
+.previous-top strong {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.previous-item.risk-low .previous-top strong {
+  border-color: #bbf7d0;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.previous-item.risk-medium .previous-top strong {
+  border-color: #fde68a;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.previous-item.risk-high .previous-top strong {
+  border-color: #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.previous-top span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.previous-item p {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.previous-item .safety-label {
+  margin-top: 10px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .previous-list {
+    padding-left: 22px;
+  }
+
+  .previous-item {
+    padding: 12px;
+  }
+}
+/* Readable helper text under section headings */
+.section-title p {
+  font-size: 13px;
+  line-height: 1.6;
 }
