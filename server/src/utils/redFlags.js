@@ -2,11 +2,11 @@ const RISK_ORDER = ['Low', 'Medium', 'High'];
 
 // Minimum risk level when a red-flag phrase is detected
 const RED_FLAG_RULES = [
-  {
-    label: 'Chest pain or pressure',
-    minRisk: 'High',
-    pattern: /chest\s+(pain|pressure|tightness)/i,
-  },
+ {
+  label: 'Chest pain or pressure',
+  minRisk: 'High',
+  pattern: /(chest|heart|cardiac)\s+(pain|pressure|tightness|discomfort)|pain\s+(in|across)\s+(the\s+)?chest|pain\s+(radiating|spreading)\s+to\s+(the\s+)?(left\s+)?(arm|jaw)/i,
+},
   {
     label: 'Difficulty breathing',
     minRisk: 'High',
