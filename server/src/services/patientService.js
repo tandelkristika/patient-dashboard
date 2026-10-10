@@ -1,10 +1,16 @@
+const mongoose = require('mongoose');
+
 const Patient = require('../models/Patient');
+const AIInsight = require('../models/AIInsight');
+const Appointment = require('../models/Appointment');
 const escapeRegex = require('../utils/escapeRegex');
+const { pickPatientFields } = require('../utils/pickPatientFields');
 
 const createPatient = async (doctorId, data) => {
+  // `doctor` is set LAST so a request body can never override the owner.
   const patient = await Patient.create({
+    ...pickPatientFields(data),
     doctor: doctorId,
-    ...data,
   });
 
   return patient;
@@ -86,12 +92,14 @@ const getPatientById = async (doctorId, patientId) => {
 };
 
 const updatePatient = async (doctorId, patientId, data) => {
+  // Only whitelisted fields are written. The filter includes the doctor id,
+  // so a doctor can only ever update their own patients.
   return Patient.findOneAndUpdate(
     {
       _id: patientId,
       doctor: doctorId,
     },
-    data,
+    { $set: pickPatientFields(data) },
     {
       new: true,
       runValidators: true,
@@ -99,11 +107,44 @@ const updatePatient = async (doctorId, patientId, data) => {
   );
 };
 
+// Deletes the patient AND everything that belongs to them, all-or-nothing.
+// Transactions need a replica set, which MongoDB Atlas always provides.
 const deletePatient = async (doctorId, patientId) => {
-  return Patient.findOneAndDelete({
-    _id: patientId,
-    doctor: doctorId,
-  });
+  const session = await mongoose.startSession();
+
+  try {
+    let deletedPatient = null;
+
+    await session.withTransaction(async () => {
+      // withTransaction may run this function again after a temporary error
+      deletedPatient = null;
+
+      deletedPatient = await Patient.findOneAndDelete(
+        {
+          _id: patientId,
+          doctor: doctorId,
+        },
+        { session }
+      );
+
+      // Not found, or not owned by this doctor: nothing else is touched
+      if (!deletedPatient) return;
+
+      await AIInsight.deleteMany(
+        { patient: deletedPatient._id },
+        { session }
+      );
+
+      await Appointment.deleteMany(
+        { patient: deletedPatient._id },
+        { session }
+      );
+    });
+
+    return deletedPatient;
+  } finally {
+    await session.endSession();
+  }
 };
 
 module.exports = {

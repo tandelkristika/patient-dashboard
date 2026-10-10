@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   LogOut,
+  Pencil,
   RefreshCw,
   Search,
   Settings,
@@ -42,6 +43,143 @@ const EMPTY_PATIENT_FORM = {
   surgeryName: '',
   familyHistory: '',
   lifestyleNotes: '',
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
+
+// Form fields that have their own error message under the input
+const EDIT_FORM_FIELDS = [
+  'name',
+  'age',
+  'gender',
+  'bloodGroup',
+  'phone',
+  'email',
+];
+
+// Turns a saved patient into the flat form used by the Edit dialog
+const patientToForm = (patient) => {
+  const history = patient?.medicalHistory || {};
+  const condition = history.conditions?.[0] || {};
+  const allergy = history.allergies?.[0] || {};
+  const medication = history.medications?.[0] || {};
+  const surgery = history.surgeries?.[0] || {};
+
+  return {
+    name: patient?.name || '',
+    age:
+      patient?.age === undefined || patient?.age === null
+        ? ''
+        : String(patient.age),
+    gender: patient?.gender || '',
+    bloodGroup: patient?.bloodGroup || 'Unknown',
+    phone: patient?.phone || '',
+    email: patient?.email || '',
+    conditionName: condition.name || '',
+    conditionNotes: condition.notes || '',
+    allergySubstance: allergy.substance || '',
+    allergyReaction: allergy.reaction || '',
+    medicationName: medication.name || '',
+    medicationDosage: medication.dosage || '',
+    surgeryName: surgery.name || '',
+    familyHistory: history.familyHistory || '',
+    lifestyleNotes: history.lifestyleNotes || '',
+  };
+};
+
+// The form edits the FIRST entry of each list. Any further entries the
+// patient already has are kept exactly as they are, so nothing is lost.
+const replaceFirstItem = (existingList, firstItem) => {
+  const rest = Array.isArray(existingList)
+    ? existingList.slice(1)
+    : [];
+
+  return firstItem ? [firstItem, ...rest] : rest;
+};
+
+const buildMedicalHistory = (form, existing = {}) => ({
+  conditions: replaceFirstItem(
+    existing.conditions,
+    form.conditionName.trim()
+      ? {
+          name: form.conditionName.trim(),
+          notes: form.conditionNotes.trim(),
+        }
+      : null
+  ),
+
+  allergies: replaceFirstItem(
+    existing.allergies,
+    form.allergySubstance.trim()
+      ? {
+          substance: form.allergySubstance.trim(),
+          reaction: form.allergyReaction.trim(),
+        }
+      : null
+  ),
+
+  medications: replaceFirstItem(
+    existing.medications,
+    form.medicationName.trim()
+      ? {
+          name: form.medicationName.trim(),
+          dosage: form.medicationDosage.trim(),
+        }
+      : null
+  ),
+
+  surgeries: replaceFirstItem(
+    existing.surgeries,
+    form.surgeryName.trim()
+      ? { name: form.surgeryName.trim() }
+      : null
+  ),
+
+  familyHistory: form.familyHistory.trim(),
+  lifestyleNotes: form.lifestyleNotes.trim(),
+});
+
+// Returns { fieldName: 'message' }. An empty object means the form is valid.
+const validatePatientForm = (form) => {
+  const errors = {};
+
+  const name = form.name.trim();
+
+  if (!name) {
+    errors.name = 'Patient name is required';
+  } else if (name.length < 2 || name.length > 100) {
+    errors.name = 'Name must be 2 to 100 characters';
+  }
+
+  if (form.age === '' || Number.isNaN(Number(form.age))) {
+    errors.age = 'Patient age is required';
+  } else if (
+    !Number.isInteger(Number(form.age)) ||
+    Number(form.age) < 0 ||
+    Number(form.age) > 130
+  ) {
+    errors.age = 'Enter a whole number from 0 to 130';
+  }
+
+  if (!form.gender) {
+    errors.gender = 'Please select gender';
+  }
+
+  const phone = form.phone.trim();
+
+  if (phone && !PHONE_PATTERN.test(phone)) {
+    errors.phone =
+      'Use 7 to 20 characters: digits, spaces, + - ( )';
+  }
+
+  const email = form.email.trim();
+
+  if (email && !EMAIL_PATTERN.test(email)) {
+    errors.email = 'Please enter a valid email address';
+  }
+
+  return errors;
 };
 
 function App() {
@@ -116,6 +254,20 @@ function App() {
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [patientSaving, setPatientSaving] = useState(false);
   const [patientForm, setPatientForm] = useState(EMPTY_PATIENT_FORM);
+
+  // Edit patient dialog
+  const [editingPatient, setEditingPatient] = useState(null);
+  const [editForm, setEditForm] = useState({
+    ...EMPTY_PATIENT_FORM,
+  });
+  const [editErrors, setEditErrors] = useState({});
+  const [editFormError, setEditFormError] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+
+  // Delete patient dialog
+  const [patientToDelete, setPatientToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [deletingPatient, setDeletingPatient] = useState(false);
 
   const clearMessages = () => {
     setError('');
@@ -807,6 +959,276 @@ function App() {
       setDeletingAccount(false);
     }
   };
+
+  const openEditPatient = (patient) => {
+    clearMessages();
+    setEditForm(patientToForm(patient));
+    setEditErrors({});
+    setEditFormError('');
+    setEditingPatient(patient);
+  };
+
+  const closeEditPatient = () => {
+    if (editSaving) return;
+
+    setEditingPatient(null);
+  };
+
+  const updateEditField = (field, value) => {
+    setEditForm((current) => ({ ...current, [field]: value }));
+
+    setEditErrors((current) => {
+      if (!current[field]) return current;
+
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const renderEditFieldError = (field) =>
+    editErrors[field] ? (
+      <small className="field-error" role="alert">
+        {editErrors[field]}
+      </small>
+    ) : null;
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+
+    if (!editingPatient || editSaving) return;
+
+    setEditFormError('');
+
+    const validationErrors = validatePatientForm(editForm);
+    setEditErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      setEditFormError('Please fix the highlighted fields.');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setEditFormError(
+        'Your session has expired. Please sign in again.'
+      );
+      return;
+    }
+
+    try {
+      setEditSaving(true);
+
+      const response = await fetch(
+        `${API_BASE}/patients/${editingPatient._id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: editForm.name.trim(),
+            age: Number(editForm.age),
+            gender: editForm.gender,
+            bloodGroup: editForm.bloodGroup || 'Unknown',
+            phone: editForm.phone.trim(),
+            email: editForm.email.trim(),
+            medicalHistory: buildMedicalHistory(
+              editForm,
+              editingPatient.medicalHistory
+            ),
+          }),
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.success) {
+        const fieldErrors = {};
+        const otherMessages = [];
+
+        if (Array.isArray(data?.errors)) {
+          data.errors.forEach((item) => {
+            if (EDIT_FORM_FIELDS.includes(item.field)) {
+              fieldErrors[item.field] = item.message;
+            } else if (item.message) {
+              otherMessages.push(item.message);
+            }
+          });
+        }
+
+        setEditErrors(fieldErrors);
+
+        if (response.status === 401) {
+          setEditFormError(
+            'Your session has expired. Please sign in again.'
+          );
+        } else if (response.status === 404) {
+          setEditFormError(
+            'This patient no longer exists. Close this window; the list has been refreshed.'
+          );
+          loadPatients();
+        } else if (response.status >= 500) {
+          setEditFormError(
+            'Something went wrong on our side. Please try again later.'
+          );
+        } else if (otherMessages.length > 0) {
+          setEditFormError(otherMessages.join('. '));
+        } else if (Object.keys(fieldErrors).length > 0) {
+          setEditFormError('Please fix the highlighted fields.');
+        } else {
+          setEditFormError(
+            data?.message || 'Failed to update patient'
+          );
+        }
+
+        return;
+      }
+
+      const updatedPatient = data.patient;
+
+      setPatients((currentPatients) =>
+        currentPatients.map((item) =>
+          item._id === updatedPatient._id
+            ? updatedPatient
+            : item
+        )
+      );
+
+      setSelectedPatient((current) =>
+        current && current._id === updatedPatient._id
+          ? updatedPatient
+          : current
+      );
+
+      setEditingPatient(null);
+      setError('');
+      setSuccess(
+        `${updatedPatient.name} was updated successfully`
+      );
+    } catch (err) {
+      setEditFormError(
+        err instanceof TypeError
+          ? 'Cannot reach the server. Check your connection and try again.'
+          : 'Something went wrong. Please try again.'
+      );
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const openDeletePatient = (patient) => {
+    clearMessages();
+    setDeleteError('');
+    setPatientToDelete(patient);
+  };
+
+  const closeDeletePatient = () => {
+    if (deletingPatient) return;
+
+    setPatientToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!patientToDelete || deletingPatient) return;
+
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setDeleteError(
+        'Your session has expired. Please sign in again.'
+      );
+      return;
+    }
+
+    const { _id: deletedId, name: deletedName } =
+      patientToDelete;
+
+    try {
+      setDeletingPatient(true);
+      setDeleteError('');
+
+      const response = await fetch(
+        `${API_BASE}/patients/${deletedId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (response.status === 404) {
+        // Already gone on the server: refresh the list instead of guessing
+        setPatientToDelete(null);
+        setError(
+          'That patient no longer exists. The list has been refreshed.'
+        );
+        loadPatients();
+        return;
+      }
+
+      if (!response.ok || !data?.success) {
+        setDeleteError(
+          response.status === 401
+            ? 'Your session has expired. Please sign in again.'
+            : response.status >= 500
+            ? 'Something went wrong on our side. Please try again later.'
+            : data?.message || 'Failed to delete patient'
+        );
+        return;
+      }
+
+      // Only now, after the server confirmed, remove it from the screen
+      setPatients((currentPatients) =>
+        currentPatients.filter(
+          (item) => item._id !== deletedId
+        )
+      );
+
+      if (selectedPatient?._id === deletedId) {
+        setSelectedPatient(null);
+        setInsights([]);
+        setInsight(null);
+        setSymptoms('');
+        setCurrentCondition('');
+      }
+
+      setPatientToDelete(null);
+      setError('');
+      setSuccess(`${deletedName} was deleted`);
+    } catch (err) {
+      setDeleteError(
+        err instanceof TypeError
+          ? 'Cannot reach the server. Check your connection and try again.'
+          : 'Something went wrong. Please try again.'
+      );
+    } finally {
+      setDeletingPatient(false);
+    }
+  };
+
+  // Escape closes whichever dialog is open (unless a save/delete is running)
+  useEffect(() => {
+    if (!editingPatient && !patientToDelete) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape') return;
+      if (editSaving || deletingPatient) return;
+
+      setEditingPatient(null);
+      setPatientToDelete(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () =>
+      window.removeEventListener('keydown', handleKeyDown);
+  }, [editingPatient, patientToDelete, editSaving, deletingPatient]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
@@ -1812,7 +2234,7 @@ function App() {
             ) : (
               <div className="patient-management-list">
                 {filteredPatients.map((patient) => (
-                  <button
+                  <div
                     key={patient._id}
                     className={`patient-management-item ${
                       selectedPatient?._id ===
@@ -1820,44 +2242,71 @@ function App() {
                         ? 'selected'
                         : ''
                     }`}
-                    onClick={async () => {
-                      await handleSelectPatient(
-                        patient
-                      );
-
-                      setActivePage('dashboard');
-                    }}
-                    type="button"
                   >
-                    <div className="patient-avatar">
-                      {patient.name
-                        ?.charAt(0)
-                        ?.toUpperCase() || '?'}
-                    </div>
+                    <button
+                      className="patient-management-select"
+                      onClick={async () => {
+                        await handleSelectPatient(
+                          patient
+                        );
 
-                    <div className="patient-management-info">
-                      <strong>{patient.name}</strong>
-
-                      <span>
-                        {patient.age} years ·{' '}
-                        {patient.gender}
+                        setActivePage('dashboard');
+                      }}
+                      aria-label={`Open ${patient.name}`}
+                      type="button"
+                    >
+                      <span className="patient-avatar">
+                        {patient.name
+                          ?.charAt(0)
+                          ?.toUpperCase() || '?'}
                       </span>
 
-                      <small>
-                        {patient.phone ||
-                          patient.email ||
-                          'No contact information'}
-                      </small>
-                    </div>
+                      <span className="patient-management-info">
+                        <strong>{patient.name}</strong>
+
+                        <span>
+                          {patient.age} years ·{' '}
+                          {patient.gender}
+                        </span>
+
+                        <small>
+                          {patient.phone ||
+                            patient.email ||
+                            'No contact information'}
+                        </small>
+                      </span>
+                    </button>
 
                     <div className="patient-management-right">
                       <span className="patient-record-status">
                         Active record
                       </span>
 
-                      <ChevronRight size={18} />
+                      <button
+                        className="patient-action-button"
+                        onClick={() =>
+                          openEditPatient(patient)
+                        }
+                        aria-label={`Edit ${patient.name}`}
+                        title="Edit patient"
+                        type="button"
+                      >
+                        <Pencil size={16} />
+                      </button>
+
+                      <button
+                        className="patient-action-button danger"
+                        onClick={() =>
+                          openDeletePatient(patient)
+                        }
+                        aria-label={`Delete ${patient.name}`}
+                        title="Delete patient"
+                        type="button"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -2900,6 +3349,515 @@ function App() {
             : renderDashboard()}
         </main>
       </div>
+
+      {editingPatient && (
+        <div
+          className="modal-overlay"
+          onClick={closeEditPatient}
+        >
+          <div
+            className="edit-patient-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-patient-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="edit-patient-header">
+              <div className="settings-card-icon blue">
+                <Pencil size={20} />
+              </div>
+
+              <div>
+                <h2 id="edit-patient-title">
+                  Edit Patient
+                </h2>
+
+                <p>
+                  Update the details for{' '}
+                  {editingPatient.name}. Changes are
+                  saved to the patient record.
+                </p>
+              </div>
+
+              <button
+                className="modal-close"
+                onClick={closeEditPatient}
+                disabled={editSaving}
+                aria-label="Close edit patient"
+                type="button"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            {editFormError && (
+              <div
+                className="error-box edit-patient-error"
+                role="alert"
+              >
+                <span>!</span>
+                {editFormError}
+              </div>
+            )}
+
+            <form
+              className="edit-patient-form"
+              onSubmit={handleSaveEdit}
+              noValidate
+            >
+              <section className="form-section">
+                <div className="form-section-heading">
+                  <div className="settings-card-icon blue">
+                    <UserRound size={20} />
+                  </div>
+
+                  <div>
+                    <h2>Basic Information</h2>
+                    <p>
+                      Fields marked * are required.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="patient-form-grid">
+                  <label>
+                    <span>Full name *</span>
+
+                    <input
+                      type="text"
+                      value={editForm.name}
+                      onChange={(e) =>
+                        updateEditField(
+                          'name',
+                          e.target.value
+                        )
+                      }
+                      aria-invalid={Boolean(
+                        editErrors.name
+                      )}
+                      autoComplete="off"
+                      autoFocus
+                    />
+
+                    {renderEditFieldError('name')}
+                  </label>
+
+                  <label>
+                    <span>Age *</span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="130"
+                      value={editForm.age}
+                      onChange={(e) =>
+                        updateEditField(
+                          'age',
+                          e.target.value
+                        )
+                      }
+                      aria-invalid={Boolean(
+                        editErrors.age
+                      )}
+                    />
+
+                    {renderEditFieldError('age')}
+                  </label>
+
+                  <label>
+                    <span>Gender *</span>
+
+                    <select
+                      value={editForm.gender}
+                      onChange={(e) =>
+                        updateEditField(
+                          'gender',
+                          e.target.value
+                        )
+                      }
+                      aria-invalid={Boolean(
+                        editErrors.gender
+                      )}
+                    >
+                      <option value="">
+                        Select gender
+                      </option>
+                      <option value="Male">Male</option>
+                      <option value="Female">
+                        Female
+                      </option>
+                      <option value="Other">Other</option>
+                    </select>
+
+                    {renderEditFieldError('gender')}
+                  </label>
+
+                  <label>
+                    <span>Blood group</span>
+
+                    <select
+                      value={editForm.bloodGroup}
+                      onChange={(e) =>
+                        updateEditField(
+                          'bloodGroup',
+                          e.target.value
+                        )
+                      }
+                      aria-invalid={Boolean(
+                        editErrors.bloodGroup
+                      )}
+                    >
+                      <option value="Unknown">
+                        Unknown
+                      </option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+
+                    {renderEditFieldError('bloodGroup')}
+                  </label>
+
+                  <label>
+                    <span>Phone</span>
+
+                    <input
+                      type="tel"
+                      value={editForm.phone}
+                      onChange={(e) =>
+                        updateEditField(
+                          'phone',
+                          e.target.value
+                        )
+                      }
+                      aria-invalid={Boolean(
+                        editErrors.phone
+                      )}
+                      placeholder="+91 98765 43210"
+                      autoComplete="off"
+                    />
+
+                    {renderEditFieldError('phone')}
+                  </label>
+
+                  <label>
+                    <span>Email</span>
+
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) =>
+                        updateEditField(
+                          'email',
+                          e.target.value
+                        )
+                      }
+                      aria-invalid={Boolean(
+                        editErrors.email
+                      )}
+                      placeholder="patient@example.com"
+                      autoComplete="off"
+                    />
+
+                    {renderEditFieldError('email')}
+                  </label>
+                </div>
+              </section>
+
+              <section className="form-section">
+                <div className="form-section-heading">
+                  <div className="settings-card-icon purple">
+                    <ShieldCheck size={20} />
+                  </div>
+
+                  <div>
+                    <h2>Medical History</h2>
+                    <p>
+                      Edits the first entry of each
+                      list. Other saved entries are
+                      kept unchanged.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="patient-form-grid">
+                  <label>
+                    <span>Condition</span>
+
+                    <input
+                      type="text"
+                      value={editForm.conditionName}
+                      onChange={(e) =>
+                        updateEditField(
+                          'conditionName',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g. Hypertension"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Condition notes</span>
+
+                    <input
+                      type="text"
+                      value={editForm.conditionNotes}
+                      onChange={(e) =>
+                        updateEditField(
+                          'conditionNotes',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Additional notes"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Allergy</span>
+
+                    <input
+                      type="text"
+                      value={editForm.allergySubstance}
+                      onChange={(e) =>
+                        updateEditField(
+                          'allergySubstance',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g. Penicillin"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Allergy reaction</span>
+
+                    <input
+                      type="text"
+                      value={editForm.allergyReaction}
+                      onChange={(e) =>
+                        updateEditField(
+                          'allergyReaction',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g. Skin rash"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Medication</span>
+
+                    <input
+                      type="text"
+                      value={editForm.medicationName}
+                      onChange={(e) =>
+                        updateEditField(
+                          'medicationName',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g. Metformin"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Medication dosage</span>
+
+                    <input
+                      type="text"
+                      value={editForm.medicationDosage}
+                      onChange={(e) =>
+                        updateEditField(
+                          'medicationDosage',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g. 500 mg twice daily"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Past surgery</span>
+
+                    <input
+                      type="text"
+                      value={editForm.surgeryName}
+                      onChange={(e) =>
+                        updateEditField(
+                          'surgeryName',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g. Appendectomy"
+                    />
+                  </label>
+                </div>
+
+                <div className="patient-form-full">
+                  <label>
+                    <span>Family history</span>
+
+                    <textarea
+                      rows="3"
+                      maxLength="1000"
+                      value={editForm.familyHistory}
+                      onChange={(e) =>
+                        updateEditField(
+                          'familyHistory',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Relevant family medical history..."
+                    />
+
+                    <small>
+                      {editForm.familyHistory.length}/1000
+                    </small>
+                  </label>
+
+                  <label>
+                    <span>Lifestyle notes</span>
+
+                    <textarea
+                      rows="3"
+                      maxLength="1000"
+                      value={editForm.lifestyleNotes}
+                      onChange={(e) =>
+                        updateEditField(
+                          'lifestyleNotes',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Smoking, alcohol, exercise, diet, etc..."
+                    />
+
+                    <small>
+                      {editForm.lifestyleNotes.length}/1000
+                    </small>
+                  </label>
+                </div>
+              </section>
+
+              <div className="patient-form-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={closeEditPatient}
+                  disabled={editSaving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={editSaving}
+                >
+                  {editSaving ? (
+                    <>
+                      <span className="button-spinner" />
+                      Saving changes...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={17} />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {patientToDelete && (
+        <div
+          className="modal-overlay"
+          onClick={closeDeletePatient}
+        >
+          <div
+            className="delete-modal delete-patient-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-patient-title"
+            aria-describedby="delete-patient-description"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              onClick={closeDeletePatient}
+              disabled={deletingPatient}
+              aria-label="Close delete confirmation"
+              type="button"
+            >
+              <X size={19} />
+            </button>
+
+            <div className="delete-modal-icon">
+              <Trash2 size={24} />
+            </div>
+
+            <h2 id="delete-patient-title">
+              Delete {patientToDelete.name}?
+            </h2>
+
+            <p id="delete-patient-description">
+              This will permanently remove this
+              patient's record, including their saved
+              AI analyses and appointments. This
+              cannot be undone.
+            </p>
+
+            {deleteError && (
+              <div
+                className="error-box delete-patient-error"
+                role="alert"
+              >
+                <span>!</span>
+                {deleteError}
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button
+                className="cancel-button"
+                onClick={closeDeletePatient}
+                disabled={deletingPatient}
+                type="button"
+                autoFocus
+              >
+                Cancel
+              </button>
+
+              <button
+                className="delete-button modal-delete"
+                onClick={handleConfirmDelete}
+                disabled={deletingPatient}
+                type="button"
+              >
+                {deletingPatient ? (
+                  <>
+                    <span className="button-spinner" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Confirm Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {deleteModal && (
         <div

@@ -1154,9 +1154,6 @@ button:disabled {
 .patient-item + .patient-item {
   margin-top: 2px;
 }
-.patient-item.selected .patient-avatar {
-  background: #fff;
-}
 
 .patient-item:hover {
   background: #f7f9fc;
@@ -3533,8 +3530,193 @@ button:disabled {
     padding: 12px;
   }
 }
-/* Readable helper text under section headings */
+
+/* =========================================================
+   PATIENT ROW ACTIONS + EDIT / DELETE DIALOGS
+========================================================= */
+
+/* The row is now a container; the left part is the "open patient" button */
+.patient-management-item {
+  cursor: default;
+}
+
+.patient-management-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.patient-management-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-action-button {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.patient-action-button:hover {
+  border-color: #bfd3f7;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.patient-action-button.danger:hover {
+  border-color: #fecaca;
+  background: #fff0f1;
+  color: #dc2626;
+}
+
+.patient-action-button:focus-visible,
+.patient-management-select:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+/* ---- Edit dialog ---- */
+.edit-patient-modal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22);
+}
+
+.edit-patient-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 24px 62px 18px 27px;
+  border-bottom: 1px solid var(--border);
+}
+
+.edit-patient-header h2 {
+  margin: 0 0 4px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.edit-patient-header p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.edit-patient-modal .form-section {
+  padding: 22px 27px;
+}
+
+.edit-patient-modal .form-section-heading p {
+  font-size: 12px;
+}
+
+.edit-patient-error {
+  width: auto;
+  margin: 16px 27px 0;
+}
+
+.edit-patient-form .patient-form-actions {
+  position: sticky;
+  bottom: 0;
+}
+
+.field-error {
+  display: block;
+  margin-top: 5px;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.edit-patient-form .patient-form-grid [aria-invalid='true'] {
+  border-color: #dc2626;
+}
+
+/* ---- Delete dialog ---- */
+.delete-patient-modal > p {
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.delete-patient-modal h2 {
+  overflow-wrap: anywhere;
+}
+
+.delete-patient-error {
+  margin-top: 16px;
+}
+
+.delete-patient-modal .modal-actions {
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .patient-action-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .patient-management-right {
+    gap: 6px;
+  }
+
+  .edit-patient-header {
+    padding: 20px 56px 16px 18px;
+  }
+
+  .edit-patient-modal .form-section {
+    padding: 18px;
+  }
+
+  .edit-patient-error {
+    width: auto;
+    margin: 14px 18px 0;
+  }
+
+  .edit-patient-modal .patient-form-grid,
+  .edit-patient-modal .patient-form-full {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Small polish from the AI result review ---- */
 .section-title p {
   font-size: 13px;
   line-height: 1.6;
+}
+
+.patient-item.selected .patient-avatar {
+  background: #fff;
 }
